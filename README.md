@@ -1,2 +1,2 @@
 # game-driver
-javascript game for github gaem jam
+javascript game for github game jam
