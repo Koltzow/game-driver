@@ -20,6 +20,7 @@ export default class Player {
     this.vy = 0;
     this.vz = 0;
     this.angle = 0;
+    this.cameraAngle = this.angle;
     this.resistance = 0.95;
 
     this.model = new Object3D();
@@ -105,6 +106,8 @@ export default class Player {
     this.velocity *= this.resistance;
 
     this.angle *= this.resistance;
+
+    this.cameraAngle += (this.angle - this.cameraAngle) * 0.9;
 
   }
 

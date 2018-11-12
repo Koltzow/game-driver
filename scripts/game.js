@@ -258,7 +258,7 @@ export default class Game {
 
     this.player.update(this);
 
-    this.camera.position.x = - this.player.angle;
+    this.camera.position.x = - this.player.cameraAngle;
 
     //update camera position
     // this.camera.position.set(
