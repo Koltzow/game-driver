@@ -237,7 +237,7 @@ export default class Game {
     this.camera.updateProjectionMatrix();
 
     this.renderer.setSize( window.innerWidth, window.innerHeight );
-    this.composer.setSize( window.innerWidth * this.pixelRatio, window.innerHeight * this.pixelRatio);
+    this.composer.setSize( window.innerWidth, window.innerHeight );
   }
 
   update() {
