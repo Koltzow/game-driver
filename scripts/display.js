@@ -43,6 +43,11 @@ export default class Display {
     this.context.translate(x, y);
   }
 
+  text( string, font, x, y) {
+    this.context.font = font || '30px Arial';
+    this.context.fillText(string || '', x, y);
+  }
+
   setColor(color) {
     this.context.fillStyle = color;
   }
