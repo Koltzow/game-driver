@@ -91,22 +91,15 @@ export default class Player {
 
     let acc = 0;
 
-    if(game.keyboard.isPressed(game.keyboard.ARROW_UP)){
-      this.velocity -= this.acceleration;
-      acc -= this.acceleration;
-    }
+    const { controller } = game;
+    const control = controller.controllers[0];
 
-    if(game.keyboard.isPressed(game.keyboard.ARROW_DOWN)){
-      this.velocity += this.acceleration * 0.5;
-      acc += this.acceleration * 0.5;
-    }
+    if(controller.type === 'keyboard' || controller.type === 'touch') {
 
-    if(game.keyboard.isPressed(game.keyboard.ARROW_LEFT)){
-      this.angle -= this.rotationalAcceleration * this.velocity;
-    }
+      this.velocity += control.dir.y * this.acceleration;
+      acc += control.dir.y * this.acceleration;
+      this.angle += control.dir.x * this.rotationalAcceleration * this.velocity;
 
-    if(game.keyboard.isPressed(game.keyboard.ARROW_RIGHT)){
-      this.angle += this.rotationalAcceleration * this.velocity;
     }
 
     this.model.rotation.y += this.angle;

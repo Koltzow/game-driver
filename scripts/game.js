@@ -2,8 +2,9 @@
 import Engine from './engine.js';
 import Audio from './audio.js';
 import Player from './player.js';
-import Keyboard from './keyboard.js';
+import Controller from './controller/controller.js';
 import ObjLoader from './objloader.js';
+import Display from './display.js';
 
 // import THREE
 import {
@@ -41,12 +42,13 @@ export default class Game {
 
   constructor() {
 
+
     // construct engine
     this.engine = new Engine();
     this.engine.update = this.update.bind(this);
 
     // construct keyboard manager
-    this.keyboard = new Keyboard();
+    this.controller = new Controller();
 
     // construct audio mananger
     this.audio = new Audio();
@@ -91,6 +93,9 @@ export default class Game {
     // style body
     document.body.style.overflow = 'hidden';
     document.body.appendChild( this.renderer.domElement );
+
+    // create ui display
+    this.ui = new Display();
 
     // define model array
     this.models = [];
@@ -240,10 +245,13 @@ export default class Game {
     this.camera.updateProjectionMatrix();
 
     this.renderer.setSize( window.innerWidth, window.innerHeight );
-    this.composer.setSize( window.innerWidth * this.pixelRatio, window.innerHeight * this.pixelRatio);
+    this.composer.setSize( window.innerWidth, window.innerHeight );
+    this.ui.setSize( window.innerWidth, window.innerHeight );
   }
 
   update() {
+
+    this.ui.clear();
 
     this.chroma.effects[0].uniforms.get('offset').value = new Vector2(
       0.001 + 0.1 * this.player.vx,
@@ -268,7 +276,8 @@ export default class Game {
     this.composer.render();
 
 
-    this.keyboard.clear();
+    this.controller.update(this.ui.context);
+
 
   }
 
