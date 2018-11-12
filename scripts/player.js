@@ -152,6 +152,19 @@ export default class Player {
       this.angle += control.dir.x * this.rotationalAcceleration * this.velocity;
       this.tireRotation += (control.dir.x - this.tireRotation) * 0.1;
 
+    } else if (controller.type === 'gamepad') {
+
+      if(control.buttons[7].pressed){
+        this.velocity -= control.buttons[7].value * this.acceleration;
+      }
+
+      if(control.buttons[6].pressed){
+        this.velocity += control.buttons[6].value * this.acceleration;
+      }
+
+      this.angle += control.dir.x * this.rotationalAcceleration * this.velocity;
+      this.tireRotation += (control.dir.x - this.tireRotation) * 0.1;
+
     }
 
     this.model.rotation.y += this.angle;

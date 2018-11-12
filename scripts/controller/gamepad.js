@@ -62,6 +62,23 @@ export default class GamePad {
 	    	}
 	    }
 		];
+
+		var pads = navigator.getGamepads();
+
+		for (var i = 0; i < this.controllers.length; i++) {
+
+			var controller = this.controllers[i];
+			var pad = pads[i];
+
+			if(pad !== null) {
+
+		    if(!controller.connected){
+		    	console.log('GAMEPAD '+(i+1)+': connected');
+		    	controller.connected = true;
+		    	this.count++;
+		    }
+			}
+		}
 	}
 
 	update() {
@@ -86,6 +103,10 @@ export default class GamePad {
 				    for (var j = 0; j < pad.buttons.length; j++) {
 
 				    	if(controller.buttons[j] !== undefined){
+
+								if(pad.buttons[j].pressed){
+									//console.log(j);
+								}
 
 				    		controller.buttons[j].click = !controller.buttons[j].pressed && pad.buttons[j].pressed;
 				    		controller.buttons[j].pressed = pad.buttons[j].pressed;
@@ -124,8 +145,8 @@ export default class GamePad {
 			    	}
 
 			    	controller.sticks = pad.axes;
-			    	controller.dir.x = Math.round(controller.sticks[0]*3);
-			    	controller.dir.y = Math.round(controller.sticks[1]*3);
+			    	controller.dir.x = Math.round(controller.sticks[0]);
+			    	controller.dir.y = Math.round(controller.sticks[1]);
 
 			    }
 
