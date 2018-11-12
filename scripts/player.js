@@ -3,7 +3,9 @@ import {
   Vector2,
   SpotLight,
   Object3D,
-  MeshBasicMaterial
+  MeshBasicMaterial,
+  BoxGeometry,
+  Mesh
 } from 'three';
 
 export default class Player {
@@ -27,6 +29,8 @@ export default class Player {
 
     let whiteMaterial = new MeshBasicMaterial({color: 0xFFFFFF});
     let redMaterial = new MeshBasicMaterial({color: 0xFF0073});
+    
+    const tirePositions = [];
 
     this.model.children.forEach(mesh => {
       if(
@@ -42,6 +46,13 @@ export default class Player {
         mesh.material = redMaterial;
       }
     });
+    
+    tirePositions.push(new Vector3(-0.075,0,0.1));
+    tirePositions.push(new Vector3(0.075,0,0.1));
+    tirePositions.push(new Vector3(-0.075,0,-0.1));
+    tirePositions.push(new Vector3(0.075,0,-0.1));
+    
+    this.trail = new Trail(tirePositions);
 
     let lightTargetLeft = new Object3D();
     this.model.add(lightTargetLeft);
@@ -110,7 +121,64 @@ export default class Player {
     this.velocity *= this.resistance;
 
     this.angle *= this.resistance;
-
+    
+    const trailLength = Math.floor(this.velocity * -13.157894737 * 100) / 10;
+  
+    this.trail.update(game.engine.deltaTime, trailLength, this.model);
   }
 
+}
+
+
+class Trail extends Object3D {
+  constructor(tirePositions) {
+    super();
+    
+    this.tirePositions = tirePositions;
+    
+    this.items = [];
+  }
+  
+  update(delta, len, model) {
+    let i = this.items.length;
+    
+    while (i--) {
+      const item = this.items[i];
+      
+      if (item.elapsed >= item.ttl) {
+        this.remove(item.mesh);
+        this.items.splice(i, 1);
+      } else {
+        item.update(delta);
+      }
+    }
+    
+    if (!this.items.length < len * 4) {
+      this.tirePositions.forEach(tirePosition => {
+        const item = new TrailItem(model.position.clone().add(tirePosition.clone().applyQuaternion(model.quaternion)));
+        this.add(item.mesh);
+        this.items.push(item)
+      });
+    }
+  }
+}
+
+class TrailItem {
+  constructor(pos) {
+    this.ttl = 400;
+    this.elapsed = 0;
+    
+    const geometry = new BoxGeometry(0.01, 0.01, 0.01);
+    const material = new MeshBasicMaterial({ color: '#fff' });
+    
+    this.mesh = new Mesh(geometry, material);
+    
+    this.mesh.position.copy(pos);
+  }
+  
+  update(delta) {
+    this.elapsed += delta;
+    
+    this.mesh.material.opacity = this.elapsed / this.ttl;
+  }
 }

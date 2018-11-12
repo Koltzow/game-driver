@@ -120,7 +120,7 @@ export default class Game {
     if(!this.modelsLoaded || !this.audioLoaded) return;
 
     var near = 0.1;
-    var far = 500;
+    var far = 20;
 
     var light = new AmbientLight( 0x3E00AE ); // soft white light
     this.scene.add( light );
@@ -131,12 +131,13 @@ export default class Game {
     directionalLight.shadow.mapSize.height = 2048;
     directionalLight.shadow.camera.near = near;
     directionalLight.shadow.camera.far = far;
-    directionalLight.shadow.camera.left = -15;
-    directionalLight.shadow.camera.bottom = -15;
-    directionalLight.shadow.camera.right = 15;
-    directionalLight.shadow.camera.top	= 15;
+    directionalLight.shadow.camera.left = -5;
+    directionalLight.shadow.camera.bottom = -5;
+    directionalLight.shadow.camera.right = 5;
+    directionalLight.shadow.camera.top	= 5;
+    directionalLight.shadow.camera.radius	= 2;
     directionalLight.castShadow = true;
-    this.scene.add( directionalLight );
+    // this.scene.add( directionalLight );
 
     this.geometry = new BoxGeometry( 0.2, 0.2, 0.2 );
     this.material = new MeshPhongMaterial();
@@ -153,11 +154,13 @@ export default class Game {
 
     this.player = new Player(this.models['player']);
     this.player.model.scale.set(0.001, 0.001, 0.001);
+    this.player.model.add(directionalLight);
     this.player.model.receiveShadow = true;
     this.player.model.children.forEach(child => {
-      child.castShadow = true;
+      if (child.isMesh) child.castShadow = true;
     });
     this.scene.add(this.player.model);
+    this.scene.add(this.player.trail);
 
     this.camera.up = new Vector3(0,0,-1);
     this.camera.lookAt(this.player.model.position);
