@@ -9,3 +9,13 @@ javascript game for github game jam
 * Map generator
 * Enemy class
 * Bounding box collision
+
+Install node modules
+```
+npm install
+```
+
+Run server
+```
+npm start
+```
