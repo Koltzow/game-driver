@@ -24,15 +24,16 @@ export default class Player {
     this.angle = 0;
     this.resistance = 0.95;
 
-    this.model = model;
-    this.model.position.y = 0;
+    this.model = new Object3D();
 
     let whiteMaterial = new MeshBasicMaterial({color: 0xFFFFFF});
     let redMaterial = new MeshBasicMaterial({color: 0xFF0073});
     
     const tirePositions = [];
 
-    this.model.children.forEach(mesh => {
+    model.scale.set(0.001, 0.001, 0.001);
+
+    model.children.forEach(mesh => {
       if(
         mesh.name === 'DeLorean DeLorean01' || //windows
         mesh.name === 'DeLorean DeLorean02' || //front lights
@@ -55,23 +56,23 @@ export default class Player {
     this.trail = new Trail(tirePositions);
 
     let lightTargetLeft = new Object3D();
-    this.model.add(lightTargetLeft);
+    model.add(lightTargetLeft);
     lightTargetLeft.position.set(-50, 0, -400);
 
     let spotLightLeft = new SpotLight( 0xffffff );
     spotLightLeft.angle = 0.5;
     spotLightLeft.castShadow = true;
-    this.model.add(spotLightLeft);
+    model.add(spotLightLeft);
     spotLightLeft.position.set(-50, 100, -180);
     spotLightLeft.target = lightTargetLeft;
 
     let lightTargetRight = new Object3D();
-    this.model.add(lightTargetRight);
+    model.add(lightTargetRight);
     lightTargetRight.position.set(50, 0, -400);
 
     let spotLightRight = new SpotLight( 0xffffff );
     spotLightRight.angle = 0.5;
-    this.model.add(spotLightRight);
+    model.add(spotLightRight);
     spotLightRight.position.set(50, 100, -180);
     spotLightRight.target = lightTargetRight;
 
@@ -84,6 +85,7 @@ export default class Player {
     //spotLight.shadow.camera.far = 4000;
     //spotLight.shadow.camera.fov = 30;
 
+    this.model.add(model);
 
   }
 

@@ -158,7 +158,6 @@ export default class Game {
     this.scene.add( plane );
 
     this.player = new Player(this.models['player']);
-    this.player.model.scale.set(0.001, 0.001, 0.001);
     this.player.model.add(directionalLight);
     this.player.model.receiveShadow = true;
     this.player.model.children.forEach(child => {
@@ -168,8 +167,9 @@ export default class Game {
     this.scene.add(this.player.trail);
 
     this.camera.up = new Vector3(0,0,-1);
-    this.camera.lookAt(this.player.model.position);
-
+    this.player.model.add(this.camera);
+    this.camera.position.y = 0.5;
+    this.camera.position.z = 1;
 
     this.run();
 
@@ -263,13 +263,15 @@ export default class Game {
 
     this.player.update(this);
 
+    this.camera.position.x = - this.player.angle;
+
     //update camera position
-    this.camera.position.set(
-      this.player.model.position.x,
-      this.player.model.position.y+1,
-      this.player.model.position.z+1
-    );
-    this.camera.lookAt(this.player.model.position);
+    // this.camera.position.set(
+    //   this.player.model.position.x,
+    //   this.player.model.position.y+1,
+    //   this.player.model.position.z+1
+    // );
+    // this.camera.lookAt(this.player.model.position);
 
     //this.renderer.render( this.scene, this.camera );
 
