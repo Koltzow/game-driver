@@ -3,8 +3,12 @@ import {
   Vector2,
   SpotLight,
   Object3D,
-  MeshBasicMaterial
+  MeshBasicMaterial,
+  BoxGeometry,
+  Mesh
 } from 'three';
+
+import Trails from './trails';
 
 export default class Player {
 
@@ -25,8 +29,8 @@ export default class Player {
 
     this.model = new Object3D();
 
-    let whiteMaterial = new MeshBasicMaterial({color: 0xFFFFFF});
-    let redMaterial = new MeshBasicMaterial({color: 0xFF0073});
+    let whiteMaterial = new MeshBasicMaterial({ color: 0xffffff });
+    let redMaterial = new MeshBasicMaterial({ color: 0xff0073 });
 
     model.scale.set(0.001, 0.001, 0.001);
 
@@ -77,6 +81,55 @@ export default class Player {
 
     this.model.add(model);
 
+    const trailConfig = [
+      {
+        id: 'tireFrontLeft',
+        offset: new Vector3(-0.075, 0, 0.1),
+        color: '#fff',
+        maxLen: 16,
+      },
+      {
+        id: 'tireFrontRight',
+        offset: new Vector3(0.075, 0, 0.1),
+        color: '#fff',
+        maxLen: 16,
+      },
+      {
+        id: 'tireRearLeft',
+        offset: new Vector3(-0.075, 0, -0.1),
+        color: '#fff',
+        maxLen: 16,
+      },
+      {
+        id: 'tireRearRight',
+        offset: new Vector3(0.075, 0, -0.1),
+        color: '#fff',
+        maxLen: 16,
+      },
+      {
+        id: 'brakeLightLeft',
+        offset: new Vector3(-0.05, 0.1, 0.25),
+        color: '#f00',
+        maxLen: 16,
+      },
+      {
+        id: 'brakeLightRight',
+        offset: new Vector3(0.05, 0.1, 0.25),
+        color: '#f00',
+        maxLen: 16,
+      },
+    ];
+
+    this.trails = new Trails();
+
+    for (var i = 0; i < trailConfig.length; i++) {
+      const options = trailConfig[i];
+
+      this.trails.addTrail(this.model, options);
+    }
+
+    this.getVelocityScalar = this.getVelocityScalar.bind(this);
+
   }
 
   update(game) {
@@ -106,9 +159,16 @@ export default class Player {
     this.velocity *= this.resistance;
 
     this.angle *= this.resistance;
-
     this.cameraAngle += (this.angle - this.cameraAngle) * 0.9;
 
+    this.trails.update();
   }
 
+  getVelocityScalar(precision = 1000) {
+    if (precision) {
+      return Math.floor(Math.abs(this.velocity * 13.158) * precision) / precision;
+    }
+
+    return Math.abs(this.velocity * 13.158);
+  }
 }
