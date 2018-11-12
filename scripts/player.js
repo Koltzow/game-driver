@@ -8,6 +8,8 @@ import {
   Mesh
 } from 'three';
 
+import Trails from './trails';
+
 export default class Player {
 
   constructor(model) {
@@ -26,10 +28,8 @@ export default class Player {
 
     this.model = new Object3D();
 
-    let whiteMaterial = new MeshBasicMaterial({color: 0xFFFFFF});
-    let redMaterial = new MeshBasicMaterial({color: 0xFF0073});
-    
-    const tirePositions = [];
+    let whiteMaterial = new MeshBasicMaterial({ color: 0xffffff });
+    let redMaterial = new MeshBasicMaterial({ color: 0xff0073 });
 
     model.scale.set(0.001, 0.001, 0.001);
 
@@ -47,8 +47,6 @@ export default class Player {
         mesh.material = redMaterial;
       }
     });
-    
-    this.trail = new Trail(model);
 
     let lightTargetLeft = new Object3D();
     model.add(lightTargetLeft);
@@ -81,7 +79,54 @@ export default class Player {
     //spotLight.shadow.camera.fov = 30;
 
     this.model.add(model);
-    
+
+    const trailConfig = [
+      {
+        id: 'tireFrontLeft',
+        offset: new Vector3(-0.075, 0, 0.1),
+        color: '#fff',
+        maxLen: 16,
+      },
+      {
+        id: 'tireFrontRight',
+        offset: new Vector3(0.075, 0, 0.1),
+        color: '#fff',
+        maxLen: 16,
+      },
+      {
+        id: 'tireRearLeft',
+        offset: new Vector3(-0.075, 0, -0.1),
+        color: '#fff',
+        maxLen: 16,
+      },
+      {
+        id: 'tireRearRight',
+        offset: new Vector3(0.075, 0, -0.1),
+        color: '#fff',
+        maxLen: 16,
+      },
+      {
+        id: 'brakeLightLeft',
+        offset: new Vector3(-0.05, 0.1, 0.25),
+        color: '#f00',
+        maxLen: 16,
+      },
+      {
+        id: 'brakeLightRight',
+        offset: new Vector3(0.05, 0.1, 0.25),
+        color: '#f00',
+        maxLen: 16,
+      },
+    ];
+
+    this.trails = new Trails();
+
+    for (var i = 0; i < trailConfig.length; i++) {
+      const options = trailConfig[i];
+
+      this.trails.addTrail(this.model, options);
+    }
+
     this.getVelocityScalar = this.getVelocityScalar.bind(this);
 
   }
@@ -113,133 +158,15 @@ export default class Player {
     this.velocity *= this.resistance;
 
     this.angle *= this.resistance;
-  
-    this.trail.update(game.engine.deltaTime, this.model);
+
+    this.trails.update();
   }
-  
+
   getVelocityScalar(precision = 1000) {
     if (precision) {
       return Math.floor(Math.abs(this.velocity * 13.158) * precision) / precision;
     }
-    
+
     return Math.abs(this.velocity * 13.158);
-  }
-
-}
-
-
-class Trail extends Object3D {
-  constructor(car) {
-    super();
-    
-    this.car = car;
-    
-    this.maxLen = 25;
-    
-    this.tireFrontLeft = new Vector3(-0.075, 0, 0.1);
-    this.tireFrontRight = new Vector3(0.075, 0, 0.1);
-    this.tireRearLeft = new Vector3(-0.075, 0, -0.1);
-    this.tireRearRight = new Vector3(0.075, 0, -0.1);
-    
-    this.brakeLightLeft = new Vector3(-0.05, 0.1, 0.25);
-    this.brakeLightRight = new Vector3(0.05, 0.1, 0.25);
-    
-    this.trails = [
-      { id: 'tireFrontLeftTrailCoords', name: 'tireFrontLeft' },
-      { id: 'tireFrontRightTrailCoords', name: 'tireFrontRight' },
-      { id: 'tireRearLeftTrailCoords', name: 'tireRearLeft' },
-      { id: 'tireRearRightTrailCoords', name: 'tireRearRight' },
-      { id: 'brakeLightLeftTrailCoords', name: 'brakeLightLeft' },
-      { id: 'brakeLightRightTrailCoords', name: 'brakeLightRight' },
-    ];
-    
-    this.trails.forEach(trail => {
-      this[trail.id] = [];
-    });
-    
-    this.update = this.update.bind(this);
-    this.update = this.update.bind(this);
-    this.addItem = this.addItem.bind(this);
-    this.updateItems = this.updateItems.bind(this);
-  }
-  
-  update(delta, target) {
-    this.trails
-      .forEach(trail => {
-        if (this[trail.id].length <= this.maxLen) {
-          const color = /brake/.test(trail.id) ? '#f00' : '#fff';
-          
-          this.addItem(trail.id, target, this[trail.name], color);
-        }
-        
-        this.updateItems(trail.id, delta);
-      });
-  }
-  
-  updateItems(id, delta) {
-    if (!this[id]) throw Error(`Trail has no trail named ${id}`);
-    
-    for (var i = this[id].length - 1; i >= 0; i--) {
-      const item = this[id][i];
-      
-      item.update(delta);
-    }
-  }
-  
-  addItem(id, target, offset, color) {
-    if (!this[id]) throw Error(`Trail has no items named ${id}`);
-    
-    const item = new TrailItem(target, offset, color);
-    
-    this.add(item.mesh);
-    this[id].push(item);
-  }
-  
-}
-
-class TrailItem {
-  constructor(target, offset, color) {
-    this.ttl = 400;
-    this.elapsed = 0;
-    
-    this.target = target;
-    this.offset = offset;
-    
-    this.position = new Vector3();
-    
-    const geometry = new BoxGeometry(0.02, 0.01, 0.01);
-    const material = new MeshBasicMaterial({ color });
-    material.transparent = true;
-    
-    this.mesh = new Mesh(geometry, material);
-    
-    this.update = this.update.bind(this);
-    this.reset = this.reset.bind(this);
-    
-    this.reset();
-  }
-  
-  calcPos() {
-    const target = this.target.position.clone();
-    const offset = this.offset.clone();
-    
-    return target.add(offset.applyQuaternion(this.target.quaternion));
-  }
-  
-  update(delta) {
-    this.elapsed += delta;
-    
-    this.mesh.material.opacity = 1 - this.elapsed / this.ttl;
-    
-    if (this.elapsed >= this.ttl) {
-      this.reset();
-    }
-  }
-  
-  reset() {
-    this.elapsed = 0;
-    this.position = this.calcPos();
-    
-    this.mesh.position.copy(this.position);
   }
 }

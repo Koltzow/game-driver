@@ -69,7 +69,7 @@ export default class Game {
     ]);
 
     // construct camera
-    this.camera = new PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.01, 10 );
+    this.camera = new PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.01, 200 );
 
     // create a new scene
     this.scene = new Scene();
@@ -124,8 +124,8 @@ export default class Game {
 
     if(!this.modelsLoaded || !this.audioLoaded) return;
 
-    var near = 0.1;
-    var far = 20;
+    var near = 0.01;
+    var far = 200;
 
     var light = new AmbientLight( 0x3E00AE ); // soft white light
     this.scene.add( light );
@@ -164,7 +164,7 @@ export default class Game {
       if (child.isMesh) child.castShadow = true;
     });
     this.scene.add(this.player.model);
-    this.scene.add(this.player.trail);
+    this.scene.add(this.player.trails);
 
     this.camera.up = new Vector3(0,0,-1);
     this.player.model.add(this.camera);
