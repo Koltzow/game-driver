@@ -3,32 +3,36 @@ import {
   Vector2,
   SpotLight,
   Object3D,
-  MeshBasicMaterial
+  MeshBasicMaterial,
+  BoxGeometry,
+  Mesh
 } from 'three';
 
 export default class Player {
 
   constructor(model) {
 
-    this.width = 50;
-    this.height = 100;
-    this.acceleration = 0.004;
-    this.rotationalAcceleration = 0.04;
+    this.acceleration = 0.015;
+    this.rotationalAcceleration = 0.01;
     this.position = new Vector2();
     this.velocity = 0;
     this.vx = 0;
     this.vy = 0;
     this.vz = 0;
-    this.angle = 0;
-    this.cameraAngle = this.angle;
     this.resistance = 0.95;
+    this.angle = 0;
+    this.cameraAngle = 0;
+    this.frontTires = null;
+    this.tireRotation = 0;
 
     this.model = new Object3D();
 
     let whiteMaterial = new MeshBasicMaterial({color: 0xFFFFFF});
     let redMaterial = new MeshBasicMaterial({color: 0xFF0073});
 
-    model.scale.set(0.001, 0.001, 0.001);
+    const tirePositions = [];
+
+    model.scale.set(0.01, 0.01, 0.01);
 
     model.children.forEach(mesh => {
       if(
@@ -40,10 +44,24 @@ export default class Player {
         mesh.material = whiteMaterial;
       }
 
+      if(mesh.name === 'DeLorean DeLorean11') {
+        this.frontTires = mesh;
+      }
+
       if(mesh.name === 'DeLorean DeLorean14') {
         mesh.material = redMaterial;
       }
     });
+
+    // tirePositions.push(new Vector3(-0.075,0,0.1));
+    // tirePositions.push(new Vector3(0.075,0,0.1));
+    // tirePositions.push(new Vector3(-0.075,0,-0.1));
+    // tirePositions.push(new Vector3(0.075,0,-0.1));
+
+    tirePositions.push(new Vector3(0.50, 0.80, 2.2));
+    tirePositions.push(new Vector3(-0.50, 0.80, 2.2));
+
+    this.trail = new Trail(tirePositions);
 
     let lightTargetLeft = new Object3D();
     model.add(lightTargetLeft);
@@ -66,15 +84,6 @@ export default class Player {
     spotLightRight.position.set(50, 100, -180);
     spotLightRight.target = lightTargetRight;
 
-    //this.spotLight.position.set(0,100,100);
-    //this.spotLight.target.position.add(new Vector3(0, 100, 200));
-    //spotLight.castShadow = true;
-    //spotLight.shadow.mapSize.width = 1024;
-    //spotLight.shadow.mapSize.height = 1024;
-    //spotLight.shadow.camera.near = 500;
-    //spotLight.shadow.camera.far = 4000;
-    //spotLight.shadow.camera.fov = 30;
-
     this.model.add(model);
 
   }
@@ -89,26 +98,87 @@ export default class Player {
     if(controller.type === 'keyboard' || controller.type === 'touch') {
 
       this.velocity += control.dir.y * this.acceleration;
-      acc += control.dir.y * this.acceleration;
       this.angle += control.dir.x * this.rotationalAcceleration * this.velocity;
+      this.tireRotation += (control.dir.x - this.tireRotation) * 0.1;
 
     }
 
     this.model.rotation.y += this.angle;
 
-    this.vz += Math.cos(this.model.rotation.y) * acc;
-    this.vx += Math.sin(this.model.rotation.y) * acc;
+    this.vz = Math.cos(this.model.rotation.y) * this.velocity;
+    this.vx = Math.sin(this.model.rotation.y) * this.velocity;
+
+    this.velocity *= this.resistance;
+    this.angle *= this.resistance;
+    this.cameraAngle += (this.angle - this.cameraAngle) * 0.05;
+    this.tireRotation *= 0.95;
 
     this.model.position.add(new Vector3(this.vx, this.vy, this.vz));
+    this.frontTires.rotation.y = -this.tireRotation * 0.5;
+    this.frontTires.position.x = -this.tireRotation * 40;
 
-    this.vx *= this.resistance;
-    this.vz *= this.resistance;
-    this.velocity *= this.resistance;
 
-    this.angle *= this.resistance;
 
-    this.cameraAngle += (this.angle - this.cameraAngle) * 0.9;
+    //this.cameraAngle += (this.angle - this.cameraAngle);
 
+    const trailLength = Math.floor(this.velocity * -13.157894737 * 100) / 10;
+
+    this.trail.update(game.engine.deltaTime, trailLength, this.model);
   }
 
+}
+
+
+class Trail extends Object3D {
+  constructor(tirePositions) {
+    super();
+
+    this.tirePositions = tirePositions;
+
+    this.items = [];
+  }
+
+  update(delta, len, model) {
+    let i = this.items.length;
+
+    while (i--) {
+      const item = this.items[i];
+
+      if (item.elapsed >= item.ttl) {
+        this.remove(item.mesh);
+        this.items.splice(i, 1);
+      } else {
+        item.update(delta);
+      }
+    }
+
+    if (!this.items.length < len * 4) {
+      this.tirePositions.forEach(tirePosition => {
+        const item = new TrailItem(model.position.clone().add(tirePosition.clone().applyQuaternion(model.quaternion)), model.rotation.y);
+        this.add(item.mesh);
+        this.items.push(item)
+      });
+    }
+  }
+}
+
+class TrailItem {
+  constructor(pos, rot) {
+    this.ttl = 400;
+    this.elapsed = 0;
+
+    const geometry = new BoxGeometry(0.3, 0.1, 0.1);
+    const material = new MeshBasicMaterial({ color: 0xFF0073 });
+    material.transparent = true;
+
+    this.mesh = new Mesh(geometry, material);
+
+    this.mesh.rotation.y = rot;
+    this.mesh.position.copy(pos);
+  }
+
+  update(delta) {
+    this.elapsed += delta;
+    this.mesh.material.opacity = 1 - this.elapsed / this.ttl;
+  }
 }

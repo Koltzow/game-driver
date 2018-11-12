@@ -69,7 +69,7 @@ export default class Game {
     ]);
 
     // construct camera
-    this.camera = new PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.01, 10 );
+    this.camera = new PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.01, 500 );
 
     // create a new scene
     this.scene = new Scene();
@@ -125,7 +125,7 @@ export default class Game {
     if(!this.modelsLoaded || !this.audioLoaded) return;
 
     var near = 0.1;
-    var far = 500;
+    var far = 20;
 
     var light = new AmbientLight( 0x3E00AE ); // soft white light
     this.scene.add( light );
@@ -136,14 +136,15 @@ export default class Game {
     directionalLight.shadow.mapSize.height = 2048;
     directionalLight.shadow.camera.near = near;
     directionalLight.shadow.camera.far = far;
-    directionalLight.shadow.camera.left = -15;
-    directionalLight.shadow.camera.bottom = -15;
-    directionalLight.shadow.camera.right = 15;
-    directionalLight.shadow.camera.top	= 15;
+    directionalLight.shadow.camera.left = -5;
+    directionalLight.shadow.camera.bottom = -5;
+    directionalLight.shadow.camera.right = 5;
+    directionalLight.shadow.camera.top	= 5;
+    directionalLight.shadow.camera.radius	= 2;
     directionalLight.castShadow = true;
-    this.scene.add( directionalLight );
+    // this.scene.add( directionalLight );
 
-    this.geometry = new BoxGeometry( 0.2, 0.2, 0.2 );
+    this.geometry = new BoxGeometry( 1, 1, 1 );
     this.material = new MeshPhongMaterial();
     this.material.castShadow = true;
 
@@ -157,16 +158,18 @@ export default class Game {
     this.scene.add( plane );
 
     this.player = new Player(this.models['player']);
+    this.player.model.add(directionalLight);
     this.player.model.receiveShadow = true;
     this.player.model.children.forEach(child => {
-      child.castShadow = true;
+      if (child.isMesh) child.castShadow = true;
     });
     this.scene.add(this.player.model);
+    this.scene.add(this.player.trail);
 
     this.camera.up = new Vector3(0,0,-1);
     this.player.model.add(this.camera);
-    this.camera.position.y = 0.5;
-    this.camera.position.z = 1;
+    this.camera.position.y = 5;
+    this.camera.position.z = 12;
 
     this.run();
 
@@ -178,12 +181,10 @@ export default class Game {
 
     // add ChromaticAberrationEffect
     this.chroma = new EffectPass(this.camera, new ChromaticAberrationEffect());
-    this.chroma.effects[0].uniforms.get('offset').value = new Vector2(0.01, 0.01);
     this.composer.addPass(this.chroma);
 
     // add DotScreenEffect
     let dotscreen = new EffectPass(this.camera, new DotScreenEffect());
-    console.log(dotscreen.effects[0]);
     dotscreen.effects[0].uniforms.get('scale').value = 0.75;
     dotscreen.effects[0].blendMode.blendFunction = 12;
     dotscreen.effects[0].blendMode.opacity.value = 0.1;
@@ -248,50 +249,24 @@ export default class Game {
 
   update() {
 
-    this.chroma.effects[0].uniforms.get('offset').value = new Vector2(
-      0.001 + 0.1 * this.player.vx,
-      0.001 + 0.1 * this.player.vz
-    );
+    // this.chroma.effects[0].uniforms.get('offset').value = new Vector2(
+    //   0.001 + 0.1 * this.player.vx,
+    //   0.001 + 0.1 * this.player.vz
+    // );
 
     this.mesh.rotation.x += 0.01;
     this.mesh.rotation.y += 0.02;
 
     this.player.update(this);
 
-    this.camera.position.x = - this.player.cameraAngle;
+    this.camera.position.x = this.player.cameraAngle * -50;
 
-    //update camera position
-    // this.camera.position.set(
-    //   this.player.model.position.x,
-    //   this.player.model.position.y+1,
-    //   this.player.model.position.z+1
-    // );
-    // this.camera.lookAt(this.player.model.position);
-
-    //this.renderer.render( this.scene, this.camera );
 
     this.composer.render();
 
     this.ui.render(this);
 
-
     this.controller.update(this.ui.display.context);
-
-
-  }
-
-  render() {
-
-    this.display.clear();
-    this.display.background('#1D0751');
-    this.display.translate(this.display.width/2 - this.camera.x, this.display.height/2 - this.camera.y);
-
-    this.display.circle(200, 200, 50, 'yellow');
-
-    //render stuff here
-    this.player.render(this.display.context);
-
-    this.display.translate(-(this.display.width/2 - this.camera.x), -(this.display.height/2 - this.camera.y));
 
   }
 
