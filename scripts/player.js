@@ -165,6 +165,7 @@ class TrailItem {
     
     const geometry = new BoxGeometry(0.01, 0.01, 0.01);
     const material = new MeshBasicMaterial({ color: '#fff' });
+    material.transparent = true;
     
     this.mesh = new Mesh(geometry, material);
     
@@ -174,6 +175,6 @@ class TrailItem {
   update(delta) {
     this.elapsed += delta;
     
-    this.mesh.material.opacity = this.elapsed / this.ttl;
+    this.mesh.material.opacity = 1 - this.elapsed / this.ttl;
   }
 }
