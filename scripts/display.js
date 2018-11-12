@@ -50,6 +50,15 @@ export default class Display {
     this.context.fill();
   }
 
+  setSize( width, height ) {
+    this.width = width;
+    this.height = height;
+    this.canvas.width = this.width;
+    this.canvas.height = this.height;
+    this.canvas.style.width = this.width + 'px';
+    this.canvas.style.height = this.height + 'px';
+  }
+
   resize() {
     this.width = window.innerWidth;
     this.height = window.innerHeight;
