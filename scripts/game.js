@@ -4,7 +4,7 @@ import Audio from './audio.js';
 import Player from './player.js';
 import Controller from './controller/controller.js';
 import ObjLoader from './objloader.js';
-import Display from './display.js';
+import Ui from './ui.js';
 
 // import THREE
 import {
@@ -95,7 +95,7 @@ export default class Game {
     document.body.appendChild( this.renderer.domElement );
 
     // create ui display
-    this.ui = new Display();
+    this.ui = new Ui();
 
     // define model array
     this.models = [];
@@ -248,8 +248,6 @@ export default class Game {
 
   update() {
 
-    this.ui.clear();
-
     this.chroma.effects[0].uniforms.get('offset').value = new Vector2(
       0.001 + 0.1 * this.player.vx,
       0.001 + 0.1 * this.player.vz
@@ -274,8 +272,10 @@ export default class Game {
 
     this.composer.render();
 
+    this.ui.render(this);
 
-    this.controller.update(this.ui.context);
+
+    this.controller.update(this.ui.display.context);
 
 
   }

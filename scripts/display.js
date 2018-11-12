@@ -43,11 +43,18 @@ export default class Display {
     this.context.translate(x, y);
   }
 
-  circle(x = 0, y = 0, radius = 10, color = 'black') {
+  setColor(color) {
     this.context.fillStyle = color;
+  }
+
+  circle(x = 0, y = 0, radius = 10) {
     this.context.beginPath();
     this.context.arc(x,y,radius,0,2*Math.PI);
     this.context.fill();
+  }
+
+  rect(x = 0, y = 0, width = 0, height = 0) {
+    this.context.fillRect(x, y, width, height);
   }
 
   setSize( width, height ) {
