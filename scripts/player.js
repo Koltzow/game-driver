@@ -48,12 +48,7 @@ export default class Player {
       }
     });
     
-    tirePositions.push(new Vector3(-0.075,0,0.1));
-    tirePositions.push(new Vector3(0.075,0,0.1));
-    tirePositions.push(new Vector3(-0.075,0,-0.1));
-    tirePositions.push(new Vector3(0.075,0,-0.1));
-    
-    this.trail = new Trail(tirePositions);
+    this.trail = new Trail(model);
 
     let lightTargetLeft = new Object3D();
     model.add(lightTargetLeft);
@@ -86,6 +81,8 @@ export default class Player {
     //spotLight.shadow.camera.fov = 30;
 
     this.model.add(model);
+    
+    this.getVelocityScalar = this.getVelocityScalar.bind(this);
 
   }
 
@@ -116,65 +113,133 @@ export default class Player {
     this.velocity *= this.resistance;
 
     this.angle *= this.resistance;
-    
-    const trailLength = Math.floor(this.velocity * -13.157894737 * 100) / 10;
   
-    this.trail.update(game.engine.deltaTime, trailLength, this.model);
+    this.trail.update(game.engine.deltaTime, this.model);
+  }
+  
+  getVelocityScalar(precision = 1000) {
+    if (precision) {
+      return Math.floor(Math.abs(this.velocity * 13.158) * precision) / precision;
+    }
+    
+    return Math.abs(this.velocity * 13.158);
   }
 
 }
 
 
 class Trail extends Object3D {
-  constructor(tirePositions) {
+  constructor(car) {
     super();
     
-    this.tirePositions = tirePositions;
+    this.car = car;
     
-    this.items = [];
+    this.maxLen = 25;
+    
+    this.tireFrontLeft = new Vector3(-0.075, 0, 0.1);
+    this.tireFrontRight = new Vector3(0.075, 0, 0.1);
+    this.tireRearLeft = new Vector3(-0.075, 0, -0.1);
+    this.tireRearRight = new Vector3(0.075, 0, -0.1);
+    
+    this.brakeLightLeft = new Vector3(-0.05, 0.1, 0.25);
+    this.brakeLightRight = new Vector3(0.05, 0.1, 0.25);
+    
+    this.trails = [
+      { id: 'tireFrontLeftTrailCoords', name: 'tireFrontLeft' },
+      { id: 'tireFrontRightTrailCoords', name: 'tireFrontRight' },
+      { id: 'tireRearLeftTrailCoords', name: 'tireRearLeft' },
+      { id: 'tireRearRightTrailCoords', name: 'tireRearRight' },
+      { id: 'brakeLightLeftTrailCoords', name: 'brakeLightLeft' },
+      { id: 'brakeLightRightTrailCoords', name: 'brakeLightRight' },
+    ];
+    
+    this.trails.forEach(trail => {
+      this[trail.id] = [];
+    });
+    
+    this.update = this.update.bind(this);
+    this.update = this.update.bind(this);
+    this.addItem = this.addItem.bind(this);
+    this.updateItems = this.updateItems.bind(this);
   }
   
-  update(delta, len, model) {
-    let i = this.items.length;
-    
-    while (i--) {
-      const item = this.items[i];
-      
-      if (item.elapsed >= item.ttl) {
-        this.remove(item.mesh);
-        this.items.splice(i, 1);
-      } else {
-        item.update(delta);
-      }
-    }
-    
-    if (!this.items.length < len * 4) {
-      this.tirePositions.forEach(tirePosition => {
-        const item = new TrailItem(model.position.clone().add(tirePosition.clone().applyQuaternion(model.quaternion)));
-        this.add(item.mesh);
-        this.items.push(item)
+  update(delta, target) {
+    this.trails
+      .forEach(trail => {
+        if (this[trail.id].length <= this.maxLen) {
+          const color = /brake/.test(trail.id) ? '#f00' : '#fff';
+          
+          this.addItem(trail.id, target, this[trail.name], color);
+        }
+        
+        this.updateItems(trail.id, delta);
       });
+  }
+  
+  updateItems(id, delta) {
+    if (!this[id]) throw Error(`Trail has no trail named ${id}`);
+    
+    for (var i = this[id].length - 1; i >= 0; i--) {
+      const item = this[id][i];
+      
+      item.update(delta);
     }
   }
+  
+  addItem(id, target, offset, color) {
+    if (!this[id]) throw Error(`Trail has no items named ${id}`);
+    
+    const item = new TrailItem(target, offset, color);
+    
+    this.add(item.mesh);
+    this[id].push(item);
+  }
+  
 }
 
 class TrailItem {
-  constructor(pos) {
+  constructor(target, offset, color) {
     this.ttl = 400;
     this.elapsed = 0;
     
-    const geometry = new BoxGeometry(0.01, 0.01, 0.01);
-    const material = new MeshBasicMaterial({ color: '#fff' });
+    this.target = target;
+    this.offset = offset;
+    
+    this.position = new Vector3();
+    
+    const geometry = new BoxGeometry(0.02, 0.01, 0.01);
+    const material = new MeshBasicMaterial({ color });
     material.transparent = true;
     
     this.mesh = new Mesh(geometry, material);
     
-    this.mesh.position.copy(pos);
+    this.update = this.update.bind(this);
+    this.reset = this.reset.bind(this);
+    
+    this.reset();
+  }
+  
+  calcPos() {
+    const target = this.target.position.clone();
+    const offset = this.offset.clone();
+    
+    return target.add(offset.applyQuaternion(this.target.quaternion));
   }
   
   update(delta) {
     this.elapsed += delta;
     
     this.mesh.material.opacity = 1 - this.elapsed / this.ttl;
+    
+    if (this.elapsed >= this.ttl) {
+      this.reset();
+    }
+  }
+  
+  reset() {
+    this.elapsed = 0;
+    this.position = this.calcPos();
+    
+    this.mesh.position.copy(this.position);
   }
 }
