@@ -66,7 +66,7 @@ export default class Keyboard {
 
 	}
 
-	keyup(e) {
+	keyup(event) {
 
 		// forget pressed key
 		this.pressedKeys[event.which] = false;

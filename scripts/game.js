@@ -78,7 +78,7 @@ export default class Game {
     this.renderer = new WebGLRenderer({
       preserveDrawingBuffer: true
     });
-    this.renderer.setPixelRatio( window.devicePixelRatio );
+    //this.renderer.setPixelRatio( window.devicePixelRatio );
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = PCFSoftShadowMap;
     this.renderer.setSize( window.innerWidth, window.innerHeight );
@@ -124,8 +124,8 @@ export default class Game {
 
     if(!this.modelsLoaded || !this.audioLoaded) return;
 
-    var near = 0.1;
-    var far = 20;
+    var near = 0.01;
+    var far = 200;
 
     var light = new AmbientLight( 0x3E00AE ); // soft white light
     this.scene.add( light );
@@ -144,14 +144,22 @@ export default class Game {
     directionalLight.castShadow = true;
     // this.scene.add( directionalLight );
 
-    this.geometry = new BoxGeometry( 1, 1, 1 );
+    this.geometry = new BoxGeometry( 4, 4, 4 );
     this.material = new MeshPhongMaterial();
     this.material.castShadow = true;
 
-    this.mesh = new Mesh( this.geometry, this.material );
-    this.scene.add( this.mesh );
+    for (var i = 0; i < 10; i++) {
+      let mesh = new Mesh( this.geometry, this.material );
+      mesh.position.x = Math.random() * 200 - 100;
+      mesh.position.z = Math.random()* 200 - 100;
+      this.scene.add( mesh );
+    }
 
-    var plane = new Mesh( new PlaneGeometry( 100, 100 ), new MeshPhongMaterial( { color: 0x1A0056, opacity: 1 } ) );
+
+    // let mesh = new Mesh( this.geometry, this.material );
+    // this.scene.add( this.mesh );
+
+    var plane = new Mesh( new PlaneGeometry( 200, 200 ), new MeshPhongMaterial( { color: 0x000077, opacity: 1 } ) );
     plane.position.z = -1;
     plane.rotation.x -= Math.PI/2;
     plane.receiveShadow = true;
@@ -164,7 +172,7 @@ export default class Game {
       if (child.isMesh) child.castShadow = true;
     });
     this.scene.add(this.player.model);
-    this.scene.add(this.player.trail);
+    //this.scene.add(this.player.trails);
 
     this.camera.up = new Vector3(0,0,-1);
     this.player.model.add(this.camera);
@@ -185,7 +193,7 @@ export default class Game {
 
     // add DotScreenEffect
     let dotscreen = new EffectPass(this.camera, new DotScreenEffect());
-    dotscreen.effects[0].uniforms.get('scale').value = 0.75;
+    dotscreen.effects[0].uniforms.get('scale').value = 1;
     dotscreen.effects[0].blendMode.blendFunction = 12;
     dotscreen.effects[0].blendMode.opacity.value = 0.1;
     this.composer.addPass( dotscreen );
@@ -254,8 +262,8 @@ export default class Game {
     //   0.001 + 0.1 * this.player.vz
     // );
 
-    this.mesh.rotation.x += 0.01;
-    this.mesh.rotation.y += 0.02;
+    // this.mesh.rotation.x += 0.01;
+    // this.mesh.rotation.y += 0.02;
 
     this.player.update(this);
 

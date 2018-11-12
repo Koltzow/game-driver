@@ -8,12 +8,14 @@ import {
   Mesh
 } from 'three';
 
+import Trails from './trails';
+
 export default class Player {
 
   constructor(model) {
 
-    this.acceleration = 0.015;
-    this.rotationalAcceleration = 0.01;
+    this.acceleration = 0.04;
+    this.rotationalAcceleration = 0.003;
     this.position = new Vector2();
     this.velocity = 0;
     this.vx = 0;
@@ -27,8 +29,8 @@ export default class Player {
 
     this.model = new Object3D();
 
-    let whiteMaterial = new MeshBasicMaterial({color: 0xFFFFFF});
-    let redMaterial = new MeshBasicMaterial({color: 0xFF0073});
+    let whiteMaterial = new MeshBasicMaterial({ color: 0xffffff });
+    let redMaterial = new MeshBasicMaterial({ color: 0xff0073 });
 
     const tirePositions = [];
 
@@ -86,6 +88,55 @@ export default class Player {
 
     this.model.add(model);
 
+    const trailConfig = [
+      {
+        id: 'tireFrontLeft',
+        offset: new Vector3(-0.75, 0, 1),
+        color: '#fff',
+        maxLen: 16,
+      },
+      {
+        id: 'tireFrontRight',
+        offset: new Vector3(0.75, 0, 1),
+        color: '#fff',
+        maxLen: 16,
+      },
+      {
+        id: 'tireRearLeft',
+        offset: new Vector3(-0.75, 0, -1),
+        color: '#fff',
+        maxLen: 16,
+      },
+      {
+        id: 'tireRearRight',
+        offset: new Vector3(0.75, 0, -1),
+        color: '#fff',
+        maxLen: 16,
+      },
+      {
+        id: 'brakeLightLeft',
+        offset: new Vector3(-0.5, 1, 2.5),
+        color: 0xff0073,
+        maxLen: 16,
+      },
+      {
+        id: 'brakeLightRight',
+        offset: new Vector3(0.5, 1, 2.5),
+        color: 0xff0073,
+        maxLen: 16,
+      },
+    ];
+
+    this.trails = new Trails();
+
+    for (var i = 0; i < trailConfig.length; i++) {
+      const options = trailConfig[i];
+
+      this.trails.addTrail(this.model, options);
+    }
+
+    this.getVelocityScalar = this.getVelocityScalar.bind(this);
+
   }
 
   update(game) {
@@ -117,15 +168,16 @@ export default class Player {
     this.frontTires.rotation.y = -this.tireRotation * 0.5;
     this.frontTires.position.x = -this.tireRotation * 40;
 
-
-
-    //this.cameraAngle += (this.angle - this.cameraAngle);
-
-    const trailLength = Math.floor(this.velocity * -13.157894737 * 100) / 10;
-
-    this.trail.update(game.engine.deltaTime, trailLength, this.model);
+    //this.trails.update();
   }
 
+  getVelocityScalar(precision = 1000) {
+    if (precision) {
+      return Math.floor(Math.abs(this.velocity * 13.158) * precision) / precision;
+    }
+
+    return Math.abs(this.velocity * 13.158);
+  }
 }
 
 
