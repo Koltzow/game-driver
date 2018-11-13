@@ -252,7 +252,7 @@ export default class Game {
 
     this.renderer.setSize( window.innerWidth, window.innerHeight );
     this.composer.setSize( window.innerWidth, window.innerHeight );
-    this.ui.setSize( window.innerWidth, window.innerHeight );
+    this.ui.display.setSize( window.innerWidth, window.innerHeight );
   }
 
   update() {
