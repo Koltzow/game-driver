@@ -5,6 +5,7 @@ import Player from './player.js';
 import Controller from './controller/controller.js';
 import ObjLoader from './objloader.js';
 import Ui from './ui.js';
+import Level from './level.js';
 
 // import THREE
 import {
@@ -159,11 +160,11 @@ export default class Game {
     // let mesh = new Mesh( this.geometry, this.material );
     // this.scene.add( this.mesh );
 
-    var plane = new Mesh( new PlaneGeometry( 200, 200 ), new MeshPhongMaterial( { color: 0x000077, opacity: 1 } ) );
-    plane.position.z = -1;
-    plane.rotation.x -= Math.PI/2;
-    plane.receiveShadow = true;
-    this.scene.add( plane );
+    this.level = new Level({
+      size: 200,
+      enemyCount:20,
+    });
+    this.scene.add( this.level.level );
 
     this.player = new Player(this.models['player']);
     this.player.model.add(directionalLight);
@@ -172,7 +173,7 @@ export default class Game {
       if (child.isMesh) child.castShadow = true;
     });
     this.scene.add(this.player.model);
-    //this.scene.add(this.player.trails);
+    this.scene.add(this.player.trails);
 
     this.camera.up = new Vector3(0,0,-1);
     this.player.model.add(this.camera);
@@ -268,7 +269,6 @@ export default class Game {
     this.player.update(this);
 
     this.camera.position.x = this.player.cameraAngle * -50;
-
 
     this.composer.render();
 
